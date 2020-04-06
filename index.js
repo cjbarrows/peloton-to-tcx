@@ -1,8 +1,7 @@
-"use strict";
+'use strict';
 
 require('dotenv').load();
 
-var a = require('async');
 var pelotonApi = require('./lib/peloton-api');
 var tcx = require('./lib/tcx');
 var fs = require('fs');
@@ -11,88 +10,45 @@ var mkdirp = require('mkdirp');
 
 module.exports = p2t;
 
-function p2t(options, done)
-{
-    options = options || {};
-    var login = options.pLogin || process.env.PELOTON_LOGIN;
-    var password = options.pPassword || process.env.PELOTON_PASSWORD;
-    var resultsDirectory = options.resultsDirectory || './peloton-results';
+const convertWorkouts = async (workoutIds, resultsDirectory) => {
+    workoutIds.forEach(async workoutId => {
+        try {
+            const { data: workout } = await pelotonApi.getWorkout(workoutId);
 
-    var userId = null;
-    var sessionId = null;
+            const { data } = await pelotonApi.getWorkoutSample(workoutId);
 
-    a.series([
-        function (done)
-        {
-            pelotonApi.authenticate(login, password, function (err, res)
-            {
-                if (err){ return done(err); }
-                userId = res.user_id;
-                sessionId = res.session_id;
-                done();
-            });
-        },
-        function (done)
-        {
-            pelotonApi.getWorkoutHistory(userId, sessionId, options.limit, function (err, history)
-            {
-                var workoutIds = history.data.map( function (item)
-                {
-                    return item.id;
-                });
-                done(err, workoutIds);
-            });
-        },
-        function (done)
-        {
-            mkdirp(resultsDirectory, done);
-        }],
-        function (err, results)
-        {
-            if (err)
-            {
-                return done(err);
-            }
-            convertWorkouts(results[1]);
+            // data.metrics [Output, Cadence, Resistance, Speed, Heart Rate]
+
+            const xml = tcx.fromPeloton(workout, data);
+            fs.writeFileSync(
+                path.join(resultsDirectory, workoutId + '.tcx'),
+                xml.end({ pretty: true })
+            );
+        } catch (error) {
+            console.log(`Error: ${error}`);
         }
-    );
-
-    var convertWorkouts = function (workoutIds)
-    {
-        var tasks = workoutIds.map( function (workoutId)
-        {
-            return function (done)
-            {
-                pelotonApi.getWorkout(workoutId, function (err, workout)
-                {
-                    if (err)
-                    {
-                        return done(err);
-                    }
-
-                    pelotonApi.getWorkoutSample(workoutId, function (err, samples)
-                    {
-                        if (err)
-                        {
-                            return done(err);
-                        }
-
-                        var xml = tcx.fromPeloton(workout, samples);
-                        fs.writeFile(path.join(resultsDirectory, workoutId + '.tcx'),
-                            xml.end({ pretty: true }),
-                            function (err)
-                            {
-                                if (err)
-                                {
-                                    return done(err);
-                                }
-                                done(null, xml);
-                            });
-                    });
-                });
-            };
-        });
-
-        a.series(tasks, done);
-    };
+    });
 };
+
+async function p2t(options) {
+    options = options || {};
+    const login = options.pLogin || process.env.PELOTON_LOGIN;
+    const password = options.pPassword || process.env.PELOTON_PASSWORD;
+    const resultsDirectory = options.resultsDirectory || './peloton-results';
+
+    const {
+        data: { user_id: userId, session_id: sessionId }
+    } = await pelotonApi.authenticate(login, password);
+
+    const { data: history } = await pelotonApi.getWorkoutHistory(userId, sessionId, options.limit);
+
+    var workoutIds = history.data.map(item => item.id);
+
+    await mkdirp(resultsDirectory);
+
+    await convertWorkouts(workoutIds, resultsDirectory);
+
+    console.log(`exported ${workoutIds.length} workouts`);
+}
+
+p2t({ limit: 2 });

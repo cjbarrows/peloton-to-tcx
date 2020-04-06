@@ -1,27 +1,30 @@
 {
-  "name": "peloton-to-tcx",
-  "version": "1.0.5",
-  "description": "Convert Peloton data to TCX files",
-  "main": "index.js",
-  "bin": { "p2t": "./bin/p2t" },
-  "scripts": {
-    "test": "mocha --reporter spec",
-    "testcover": "istanbul cover node_modules/mocha/bin/_mocha -- -R spec"
-  },
-  "author": "Jarrett Widman",
-  "license": "MIT",
-  "devDependencies": {
-    "mocha": "^2.3.4"
-  },
-  "dependencies": {
-    "commander": "^2.9.0",
-    "dotenv": "^1.2.0",
-    "mkdirp": "^0.5.1",
-    "request": "^2.67.0",
-    "xmlbuilder": "^4.1.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/jrit/peloton-to-tcx.git"
-  }
+    "name": "peloton-to-tcx",
+    "version": "1.0.5",
+    "description": "Convert Peloton data to TCX files",
+    "main": "index.js",
+    "bin": {
+        "p2t": "./bin/p2t"
+    },
+    "scripts": {
+        "test": "mocha --reporter spec",
+        "testcover": "istanbul cover node_modules/mocha/bin/_mocha -- -R spec"
+    },
+    "author": "Jarrett Widman",
+    "license": "MIT",
+    "devDependencies": {
+        "mocha": "^2.3.4"
+    },
+    "dependencies": {
+        "axios": "^0.19.2",
+        "commander": "^2.9.0",
+        "dotenv": "^1.2.0",
+        "mkdirp": "^0.5.1",
+        "request": "^2.67.0",
+        "xmlbuilder": "^4.1.0"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/jrit/peloton-to-tcx.git"
+    }
 }
