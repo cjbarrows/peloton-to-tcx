@@ -11,7 +11,7 @@ var mkdirp = require('mkdirp');
 module.exports = p2t;
 
 const convertWorkouts = async (workoutIds, resultsDirectory) => {
-    workoutIds.forEach(async workoutId => {
+    workoutIds.forEach(async (workoutId) => {
         try {
             const { data: workout } = await pelotonApi.getWorkout(workoutId);
 
@@ -37,12 +37,12 @@ async function p2t(options) {
     const resultsDirectory = options.resultsDirectory || './peloton-results';
 
     const {
-        data: { user_id: userId, session_id: sessionId }
+        data: { user_id: userId, session_id: sessionId },
     } = await pelotonApi.authenticate(login, password);
 
     const { data: history } = await pelotonApi.getWorkoutHistory(userId, sessionId, options.limit);
 
-    var workoutIds = history.data.map(item => item.id);
+    var workoutIds = history.data.map((item) => item.id);
 
     await mkdirp(resultsDirectory);
 
@@ -51,4 +51,6 @@ async function p2t(options) {
     console.log(`exported ${workoutIds.length} workouts`);
 }
 
-p2t({ limit: 2 });
+// NOTE: I used https://gotoes.org/strava/ to combine parts of 2 tcx files into 1 file for upload to Strava
+
+p2t({ limit: 1 });
